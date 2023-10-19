@@ -1,0 +1,4 @@
+baseURL = 'https://adilhoumadi.github.com/'
+languageCode = 'en-us'
+title = 'Adil Houmadi'
+theme = 'lowkey'
