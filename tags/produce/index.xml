@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>produce on Adil Houmadi</title>
+    <link>https://adilhoumadi.github.com/tags/produce/</link>
+    <description>Recent content in produce on Adil Houmadi</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>{year}</copyright>
+    <lastBuildDate>Sun, 21 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://adilhoumadi.github.com/tags/produce/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Consume and produce data from/to Apache Kafka using CLI</title>
+      <link>https://adilhoumadi.github.com/posts/2021-03-21-consume-and-produce-data-from-to-apache-kafka-using-cli.md/</link>
+      <pubDate>Sun, 21 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://adilhoumadi.github.com/posts/2021-03-21-consume-and-produce-data-from-to-apache-kafka-using-cli.md/</guid>
+      <description>In this series of articles we will see the different methods that we can use in order to produce data to a topic, and the way to consume it. We will start by setting up a local environment using docker and docker-compose. Once the kafka ecosystem is ready we will create a topic, than produce some data and consume it via CLI.</description>
+    </item>
+    
+  </channel>
+</rss>

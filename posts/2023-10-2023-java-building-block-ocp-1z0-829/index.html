@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-us" class="scroll-smooth">
+    <head><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding Java&#39;s Building Blocks: Classes and Objects</title>
+<meta name="description" content="Java, a cornerstone of modern software development, is built upon a few foundational concepts. Among these, classes and objects stand out as the bedrock of Java&rsquo;s Object-Oriented Programming (OOP) paradigm. In this article, we&rsquo;ll demystify these concepts using a relatable example: the House class.">
+<link rel="canonical" href="https://adilhoumadi.github.com/posts/2023-10-2023-java-building-block-ocp-1z0-829/">
+<link rel="robots" href="/robots.txt" />
+
+<link rel="stylesheet" href="https://adilhoumadi.github.com/css/app.min.c5551a3e6a2fa4b96d7e0907dedf6b1b0e8c97d96398145641c8a4a11f54ca7d.css" integrity="sha256-xVUaPmovpLltfgkH3t9rGw6Ml9ljmBRWQcikoR9Uyn0=" ></head>
+    <body class="max-w-screen-md px-10 mx-auto">
+        <header class="flex flex-col sm:flex-row items-center gap-5 sm:gap-10 pt-16 py-12">
+    
+
+<div class="flex-none w-20 h-20 rounded-full overflow-hidden" >
+    <a href="https://adilhoumadi.github.com/">
+        <img srcset="/img/profile-picture_huf7d27736ba5378860910cfe219f4cad7_26255_80x80_fill_q90_box_smart1.jpg 80w" src="/img/profile-picture.jpg" width="460" height="460" alt="Adil Houmadi">
+    </a>
+</div>
+
+    <div class="flex flex-col gap-5">
+    <a href="https://adilhoumadi.github.com/">
+    
+    <h3 class="text-center sm:text-left text-4xl font-extrabold text-gray-800 ">Adil Houmadi</h3>
+    
+</a>
+    <nav>
+    <ul class="flex flex-wrap justify-center uppercase text-xs font-semibold gap-7 text-gray-500 ">
+        
+        
+        <li class="hover:text-gray-500"><a href="/">Home</a></li>
+        
+        <li class="hover:text-gray-500"><a href="/posts">Posts</a></li>
+        
+        <li class="hover:text-gray-500"><a href="/categories">Categories</a></li>
+        
+    </ul>
+</nav>
+    </div>
+</header>
+        <main id="content">
+<article class="flex flex-col gap-10">
+    <header class="flex flex-col gap-2">
+        <h2 class="text-4xl leading-snug font-bold text-gray-900">Understanding Java&#39;s Building Blocks: Classes and Objects</h2>
+
+        <div class="text-sm font-semibold text-gray-500 flex gap-3">
+        
+<time datetime="2023-10-08 00:00:00 &#43;0000 UTC" title="2023-10-08 00:00:00 &#43;0000 UTC">
+    8 October 2023
+</time>
+        
+        </div>
+    </header>
+    <section class="content text-lg text-gray-800">
+    <h2 id="introduction">Introduction</h2>
+<p>Java&rsquo;s popularity in the software development world can be attributed to its robustness, portability, and object-oriented nature. Central to Java&rsquo;s object-oriented approach are the concepts of classes and objects. Let&rsquo;s delve into these concepts and understand them with a practical example.</p>
+<h2 id="what-is-a-class">What is a Class?</h2>
+<p>In Java, a class serves as a blueprint or template for creating objects. It defines a set of properties (attributes or fields) and methods (functions) that an object created from the class will possess.</p>
+<h3 id="basic-syntax">Basic Syntax:</h3>
+<pre><code class="language-java">class ClassName {
+    // fields (or attributes)
+    dataType fieldName1;
+    dataType fieldName2;
+    // ...
+
+    // methods
+    returnType methodName1(parameters) {
+        // method body
+    }
+
+    returnType methodName2(parameters) {
+        // method body
+    }
+    // ...
+}
+</code></pre>
+<h2 id="a-practical-example-the-house-class">A Practical Example: The House Class</h2>
+<p>To make this concept more tangible, let&rsquo;s consider the House class:</p>
+<pre><code class="language-java">class House {
+    // Fields (attributes)
+    String address;
+    int numberOfRooms;
+    double squareFootage;
+
+    // Constructor
+    House(String address, int numberOfRooms, double squareFootage) {
+        this.address = address;
+        this.numberOfRooms = numberOfRooms;
+        this.squareFootage = squareFootage;
+    }
+
+    // Method to display house details
+    void displayDetails() {
+        System.out.println(&quot;Address: &quot; + address);
+        System.out.println(&quot;Number of Rooms: &quot; + numberOfRooms);
+        System.out.println(&quot;Square Footage: &quot; + squareFootage + &quot; sq. ft.&quot;);
+    }
+}
+</code></pre>
+<p>In this example:</p>
+<ul>
+<li>The House class has three fields: address, numberOfRooms, and squareFootage.</li>
+<li>The constructor initializes the fields when a new House object is created.</li>
+<li>The displayDetails() method prints out the house&rsquo;s attributes.</li>
+</ul>
+<h2 id="objects-instances-of-a-class">Objects: Instances of a Class</h2>
+<p>An object is a specific instance of a class. It&rsquo;s a concrete realization of the class blueprint.
+Using our House class, we can create multiple house objects, each with its own unique address, number of rooms, and square footage.</p>
+<pre><code>House myHouse = new House(&quot;123 Elm Street&quot;, 4, 1800.5);
+myHouse.displayDetails();
+</code></pre>
+<pre><code>Address: 123 Elm Street
+Number of Rooms: 4
+Square Footage: 1800.5 sq. ft.
+</code></pre>
+<h2 id="fields-vs-variables">Fields vs. Variables</h2>
+<p>While discussing classes and objects, it&rsquo;s essential to understand the distinction between fields and variables.
+Fields, also known as member variables or instance variables, are declared within a class but outside any method.
+They represent the state or attributes of an object.
+On the other hand, variables can be local to a method or serve as parameters to methods and constructors.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Java&rsquo;s classes and objects are foundational concepts that every developer should grasp.
+They encapsulate data and behavior, promoting modularity, reusability, and a clear structure in software design.
+By understanding and effectively using these building blocks,
+developers can harness the full power of Java&rsquo;s object-oriented capabilities.</p>
+<hr>
+<p>I hope this article provides a clear and concise overview of Java&rsquo;s building blocks, focusing on classes and objects.</p>
+
+    </section>
+    
+    
+    
+
+    
+    
+
+    <footer>
+        
+        <div class="pb-14 taxonomy-list tags-list text-gray-600 text-sm font-medium">
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/java/" alt="java" >
+                        java
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/classes/" alt="classes" >
+                        classes
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/objects/" alt="objects" >
+                        objects
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/oop/" alt="oop" >
+                        oop
+                    </a>
+            
+        </div>
+
+
+    </footer>
+</article>
+
+        </main><footer class="pt-5 pb-10 grid gap-3 sm:grid-cols-2">
+    <div class="text-xs font-semibold text-gray-500 order-2 sm:order-1 ">
+    © 2023 — <a class="hover:text-gray-500" href="https://adilhoumadi.github.com/">Adil Houmadi</a> <span class=" font-normal ">with</span> <a class="hover:text-gray-500" href="https://github.com/nixentric/Lowkey-Hugo-Theme" target="_blank" rel="noopener noreferrer">Lowkey</a>
+</div>
+    <div class="text-xs font-semibold text-gray-500 order-1 sm:order-2">
+    <ul class="flex sm:justify-end gap-5">
+    <li><a class="hover:text-gray-500" href="https://github.com/AdilHoumadi" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+</div>
+</footer></body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en-us" class="scroll-smooth">
+    <head><meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consume and produce data from/to Apache Kafka using CLI</title>
+<meta name="description" content="In this series of articles we will see the different methods that we can use in order to produce data to a topic, and the way to consume it. We will start by setting up a local environment using docker and docker-compose. Once the kafka ecosystem is ready we will create a topic, than produce some data and consume it via CLI.">
+<link rel="canonical" href="https://adilhoumadi.github.com/posts/2021-03-21-consume-and-produce-data-from-to-apache-kafka-using-cli.md/">
+<link rel="robots" href="/robots.txt" />
+
+<link rel="stylesheet" href="https://adilhoumadi.github.com/css/app.min.c5551a3e6a2fa4b96d7e0907dedf6b1b0e8c97d96398145641c8a4a11f54ca7d.css" integrity="sha256-xVUaPmovpLltfgkH3t9rGw6Ml9ljmBRWQcikoR9Uyn0=" ></head>
+    <body class="max-w-screen-md px-10 mx-auto">
+        <header class="flex flex-col sm:flex-row items-center gap-5 sm:gap-10 pt-16 py-12">
+    
+
+<div class="flex-none w-20 h-20 rounded-full overflow-hidden" >
+    <a href="https://adilhoumadi.github.com/">
+        <img srcset="/img/profile-picture_huf7d27736ba5378860910cfe219f4cad7_26255_80x80_fill_q90_box_smart1.jpg 80w" src="/img/profile-picture.jpg" width="460" height="460" alt="Adil Houmadi">
+    </a>
+</div>
+
+    <div class="flex flex-col gap-5">
+    <a href="https://adilhoumadi.github.com/">
+    
+    <h3 class="text-center sm:text-left text-4xl font-extrabold text-gray-800 ">Adil Houmadi</h3>
+    
+</a>
+    <nav>
+    <ul class="flex flex-wrap justify-center uppercase text-xs font-semibold gap-7 text-gray-500 ">
+        
+        
+        <li class="hover:text-gray-500"><a href="/">Home</a></li>
+        
+        <li class="hover:text-gray-500"><a href="/posts">Posts</a></li>
+        
+        <li class="hover:text-gray-500"><a href="/categories">Categories</a></li>
+        
+    </ul>
+</nav>
+    </div>
+</header>
+        <main id="content">
+<article class="flex flex-col gap-10">
+    <header class="flex flex-col gap-2">
+        <h2 class="text-4xl leading-snug font-bold text-gray-900">Consume and produce data from/to Apache Kafka using CLI</h2>
+
+        <div class="text-sm font-semibold text-gray-500 flex gap-3">
+        
+<time datetime="2021-03-21 00:00:00 &#43;0000 UTC" title="2021-03-21 00:00:00 &#43;0000 UTC">
+    21 March 2021
+</time>
+        
+        </div>
+    </header>
+    <section class="content text-lg text-gray-800">
+    <h2 id="requirements">Requirements</h2>
+<ul>
+<li><a href="https://docs.docker.com/get-docker/">Docker</a>.</li>
+<li><a href="https://docs.docker.com/compose/">Docker-compose</a>.</li>
+<li><a href="https://adoptopenjdk.net/installation.html">OpenJDK</a>.</li>
+<li><a href="https://stedolan.github.io/jq/">jq</a>.</li>
+</ul>
+<h2 id="introduction">Introduction</h2>
+<p>In this series of articles we will see the different methods that we can use in order to produce data to a topic, and the way to consume it. We will start by setting up a local environment using docker and docker-compose. Once the kafka ecosystem is ready we will create a topic, than produce some data and consume it via CLI.</p>
+<h2 id="local-environment">Local environment</h2>
+<p>Using the following <code>docker-compose</code> we will be able to start a local environment that contain: a <code>broker</code> and <code>zookeeper</code>.</p>
+<p>docker-compose.yml</p>
+<pre><code class="language-yaml">---
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.0.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - &quot;2181:2181&quot;
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+
+  broker:
+    image: confluentinc/cp-kafka:6.0.0
+    hostname: broker
+    container_name: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - &quot;9092:9092&quot;
+      - &quot;9101:9101&quot;
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+</code></pre>
+<p>Start the local environment by executing this command:</p>
+<pre><code class="language-bash">$ docker-compose up -d
+</code></pre>
+<p>Check if the environment is ready:</p>
+<pre><code class="language-bash">$ docker-compose ps
+
+  Name               Command            State                       Ports
+----------------------------------------------------------------------------------------------
+broker      /etc/confluent/docker/run   Up      0.0.0.0:9092-&gt;9092/tcp, 0.0.0.0:9101-&gt;9101/tcp
+zookeeper   /etc/confluent/docker/run   Up      0.0.0.0:2181-&gt;2181/tcp, 2888/tcp, 3888/tcp
+</code></pre>
+<h2 id="setup-kafka-cli">Setup kafka CLI</h2>
+<p>In order to interact with the kafka broker, Apache Kafka provides a client CLI:</p>
+<pre><code class="language-sh">$ curl -L https://archive.apache.org/dist/kafka/2.6.0/kafka_2.13-2.6.0.tgz &gt; kafka_2.13-2.6.0.tgz
+$ tar -xvf kafka_2.13-2.6.0.tgz
+$ cd kafka_2.13-2.6.0
+$ export PATH=$PWD/bin:$PATH
+$ ls -a kafka-console*                   
+
+kafka-console-consumer.sh  kafka-console-producer.sh
+</code></pre>
+<blockquote>
+<p>Add this export to your shell profile, it will allow to execute the bin from any location in the system.</p>
+</blockquote>
+<h2 id="create-the-topic">Create the topic</h2>
+<p>In order to create the topic, we will need to use <code>kafka-topics.sh</code> command and set the required parameters:</p>
+<pre><code class="language-sh">$ kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --create \
+  --topic newTopic \
+  --partitions 3 \
+  --replication-factor 1
+
+Created topic newTopic.
+</code></pre>
+<ul>
+<li><code>localhost:9092</code> - the broker address</li>
+<li><code>newTopic</code> - the topic name</li>
+<li><code>3</code> -  The number of partitions for topic</li>
+<li><code>1</code> -  The number of replication for the topic, in our environment we have only on broker.S</li>
+</ul>
+<p>To check the creation of the topic we will use the previous command with <code>--list</code> option.</p>
+<pre><code class="language-sh">$ kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+newTopic
+</code></pre>
+<p>To Have more details about the topic that has been creation, there is an option that we can set to <code>kafka-topics.sh</code> which is called <code>--describe</code>.</p>
+<pre><code class="language-sh">$ kafka-topics.sh --bootstrap-server localhost:9092 --describe
+
+Topic: newTopic PartitionCount: 3       ReplicationFactor: 1    Configs:
+        Topic: newTopic Partition: 0    Leader: 1       Replicas: 1     Isr: 1
+        Topic: newTopic Partition: 1    Leader: 1       Replicas: 1     Isr: 1
+        Topic: newTopic Partition: 2    Leader: 1       Replicas: 1     Isr: 1
+</code></pre>
+<p>The output of the command give us the number of partitions and the replicas.
+In our case we are using only on instance for the broker which is obviously refer to the number of replicas.</p>
+<blockquote>
+<p>In a future article we can discuss a setup that contain a cluster with multiple brokers.</p>
+</blockquote>
+<h2 id="produce-the-data">Produce the data</h2>
+<p>Now that we have our topic created in the broker and we could describe its configuration, we can start producing messages.</p>
+<p>In order to send messages to our topic we will use <code>kafka-console-producer.sh</code>.
+An interactive prompt will be shown and we can start writing our messages.</p>
+<p>To confirm the sending of the message we need to hit <code>ENTER</code> and continue.</p>
+<p>Once we finish our sending we can quit the process using <code>CTRL+C</code></p>
+<pre><code class="language-sh">$ kafka-console-producer.sh --bootstrap-server localhost:9092 --topic newTopic
+
+&gt;Hello world
+&gt;Bonjour monde
+&gt;Hola mundo
+&gt;^C
+</code></pre>
+<blockquote>
+<p><code>DETAIL</code>: We can start producing the data without creation of the topic. A question that we can ask ourself is the following: Why we took the time to create the topic before sending the messages? Usually in production environment the <code>auto-creation</code> for topics is disabled by default, Organizations prefer to have control and approve the creation of topics, if we want to have this behavior in our setup we can set this environment variable in our docker-compose.yml</p>
+</blockquote>
+<pre><code class="language-yaml">KAFKA_AUTO_CREATE_TOPICS_ENABLE: &quot;false&quot;
+</code></pre>
+<p>To make the production of the data more interesting we can use Meetup Streaming API.
+The following endpoint will stream open events from Meetup-API:</p>
+<pre><code class="language-yaml">https://stream.meetup.com/2/open_events
+</code></pre>
+<p>We need to execute this command to have a continuous flow from Meetup-API</p>
+<pre><code class="language-bash">curl -s https://stream.meetup.com/2/open_events | jq -c --unbuffered '{id: .id, event_url: .event_url, name: .name}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic newTopic
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;
+</code></pre>
+<p>We execute a <code>GET</code> Request via <code>curl</code> on Meetup-API and we pipe the result to <code>jq</code> to map the output and get the following fields:</p>
+<ul>
+<li>id</li>
+<li>event_url</li>
+<li>name</li>
+</ul>
+<p>For each message produced to the topic a <code>&gt;</code> will be printed to the terminal. We keep running this command in a tab to feed our topic. We will end up having json objects in our topic that look like the following structure:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;hfhhvqyccgbnb&quot;,
+  &quot;event_url&quot;: &quot;https://www.meetup.com/Hamburg-Soccer-Meetup/events/hfhhvqyccgbnb/&quot;,
+  &quot;name&quot;: &quot;Outdoor Football 8v8&quot;
+}
+</code></pre>
+<h2 id="consume-the-data">Consume the data</h2>
+<p>In the section we will spawn a new terminal to consume the data that has been produced previously.
+To do so, we will need <code>kafka-console-consumer.sh</code> binary and set the required parameters to start the consumption.</p>
+<pre><code class="language-bash">$ kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic newTopic --from-beginning
+
+{&quot;id&quot;:&quot;277066021&quot;,&quot;event_url&quot;:&quot;https://www.meetup.com/Detroit-Young-Professional-Happy-Hour/events/277066021/&quot;,&quot;name&quot;:&quot;Make New Friends - Singles Mixer (36-47)&quot;}
+{&quot;id&quot;:&quot;277066034&quot;,&quot;event_url&quot;:&quot;https://www.meetup.com/Fun-Chefs/events/277066034/&quot;,&quot;name&quot;:&quot;New Friends - Single Professionals Mixer (36-47 group)&quot;}
+...
+Processed a total of 103 messages
+</code></pre>
+<ul>
+<li><code>--from-beginning</code>: it allows to start consuming the data from the first offset.</li>
+</ul>
+<p>We can play with this command and consume from a specific offset for a specific partition with a fixed number of messages before exiting.</p>
+<pre><code class="language-bash">$ kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic newTopic \
+  --offset 1 \
+  --partition 0 \
+  --max-messages 1
+
+{&quot;id&quot;:&quot;fblqfsyccgbnb&quot;,&quot;event_url&quot;:&quot;https://www.meetup.com/Yoga-Ayurveda-Vedic-Sciences/events/fblqfsyccgbnb/&quot;,&quot;name&quot;:&quot;Yoga in The Park&quot;}
+Processed a total of 1 messages
+</code></pre>
+<ul>
+<li><code>--offset</code>: rewind the process to the specified offset.</li>
+<li><code>--partition</code>: consume from this specific partition.</li>
+<li><code>--max-messages</code>: total messages to consume before exiting the process.</li>
+</ul>
+<blockquote>
+<p><code>--offset</code> accepts an integer and <code>earliest</code> to start from the beginning or <code>latest</code> which the default value that mean consume from end.</p>
+</blockquote>
+<p>To get the status of each partition we can execute this command:</p>
+<pre><code class="language-bash">$ kafka-run-class.sh kafka.tools.GetOffsetShell \
+  --broker-list localhost:9092 \
+  --topic newTopic
+
+newTopic:0:34
+newTopic:1:41
+newTopic:2:36
+</code></pre>
+<p>We see clearly that our topic has 3 partitions: 0, 1 and 2 and for each partition we have the last offset that has been reached.</p>
+<ul>
+<li>partition 0 offset 34</li>
+<li>partition 1 offset 41</li>
+<li>partition 2 offset 36</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>As you have seen put in place a Kafka local environment is accessible to every developer that is interested to get in Streaming world. In a few minutes, we manage to setup the cluster and start producing and consuming the data.</p>
+<p>For testing purpose working with the CLI is fine and allows to prototype quickly.
+But for production application the Favorite way of producing/consuming the data is via a programming language of or using kafka connector. In the next article we will discuss how we can implement it via the Java SDK.</p>
+<p>Stay tuned ✌!</p>
+
+    </section>
+    
+    
+    
+
+    
+    
+
+    <footer>
+        
+        <div class="pb-14 taxonomy-list tags-list text-gray-600 text-sm font-medium">
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/kafka/" alt="kafka" >
+                        kafka
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/consume/" alt="consume" >
+                        consume
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/produce/" alt="produce" >
+                        produce
+                    </a>
+            
+                    <a class="bg-gray-100 py-2 px-3 rounded-lg" href="/tags/kafka-cli/" alt="kafka-cli" >
+                        kafka-cli
+                    </a>
+            
+        </div>
+
+
+    </footer>
+</article>
+
+        </main><footer class="pt-5 pb-10 grid gap-3 sm:grid-cols-2">
+    <div class="text-xs font-semibold text-gray-500 order-2 sm:order-1 ">
+    © 2023 — <a class="hover:text-gray-500" href="https://adilhoumadi.github.com/">Adil Houmadi</a> <span class=" font-normal ">with</span> <a class="hover:text-gray-500" href="https://github.com/nixentric/Lowkey-Hugo-Theme" target="_blank" rel="noopener noreferrer">Lowkey</a>
+</div>
+    <div class="text-xs font-semibold text-gray-500 order-1 sm:order-2">
+    <ul class="flex sm:justify-end gap-5">
+    <li><a class="hover:text-gray-500" href="https://github.com/AdilHoumadi" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+    </ul>
+</div>
+</footer></body>
+</html>
